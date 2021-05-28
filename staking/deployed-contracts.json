@@ -1,0 +1,54 @@
+{
+  "MintableErc20": {
+    "hardhat": {
+      "address": "0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F",
+      "deployer": "0xc783df8a850f42e7F7e57013759C285caa701eB6"
+    }
+  },
+  "InitializableAdminUpgradeabilityProxy": {
+    "hardhat": {
+      "address": "0xD6C850aeBFDC46D7F4c207e445cC0d6B0919BDBe",
+      "deployer": "0xc783df8a850f42e7F7e57013759C285caa701eB6"
+    }
+  },
+  "AaveIncentivesController": {
+    "hardhat": {
+      "address": "0x7e35Eaf7e8FBd7887ad538D4A38Df5BbD073814a",
+      "deployer": "0xc783df8a850f42e7F7e57013759C285caa701eB6"
+    }
+  },
+  "StakedAave": {
+    "hardhat": {
+      "address": "0xD6C850aeBFDC46D7F4c207e445cC0d6B0919BDBe"
+    }
+  },
+  "MockTransferHook": {
+    "hardhat": {
+      "address": "0x20Ce94F404343aD2752A2D01b43fa407db9E0D00",
+      "deployer": "0xc783df8a850f42e7F7e57013759C285caa701eB6"
+    }
+  },
+  "StakedAaveV2": {
+    "hardhat": {
+      "address": "0x0078371BDeDE8aAc7DeBfFf451B74c5EDB385Af7"
+    }
+  },
+  "ATokenMock-aDai": {
+    "hardhat": {
+      "address": "0x52d3b94181f8654db2530b0fEe1B19173f519C52",
+      "deployer": "0xc783df8a850f42e7F7e57013759C285caa701eB6"
+    }
+  },
+  "ATokenMock-aWeth": {
+    "hardhat": {
+      "address": "0xd15468525c35BDBC1eD8F2e09A00F8a173437f2f",
+      "deployer": "0xc783df8a850f42e7F7e57013759C285caa701eB6"
+    }
+  },
+  "DoubleTransferHelper": {
+    "hardhat": {
+      "address": "0x7e35Eaf7e8FBd7887ad538D4A38Df5BbD073814a",
+      "deployer": "0xc783df8a850f42e7F7e57013759C285caa701eB6"
+    }
+  }
+}
