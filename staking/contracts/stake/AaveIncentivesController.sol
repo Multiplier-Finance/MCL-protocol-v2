@@ -23,7 +23,8 @@ contract AaveIncentivesController is
   AaveDistributionManager
 {
   using SafeMath for uint256;
-  uint256 public constant REVISION = 1;
+  uint256 public constant REVISION = 2;
+  address public constant BMXX_ADDRESS = 0x2DCc9615574dAD9724CCe0523708d2A77d7a878E;
 
   IStakedAave public immutable PSM;
 
@@ -104,14 +105,12 @@ contract AaveIncentivesController is
    * @dev Claims reward for an user, on all the assets of the lending pool, accumulating the pending rewards
    * @param amount Amount of rewards to claim
    * @param to Address that will be receiving the rewards
-   * @param stake Boolean flag to determined if the claimed rewards should be staked in the Safety Module or not
    * @return Rewards claimed
    **/
   function claimRewards(
     address[] calldata assets,
     uint256 amount,
-    address to,
-    bool stake
+    address to
   ) external override returns (uint256) {
     if (amount == 0) {
       return 0;
@@ -140,7 +139,7 @@ contract AaveIncentivesController is
     uint256 amountToClaim = amount > unclaimedRewards ? unclaimedRewards : amount;
     _usersUnclaimedRewards[user] = unclaimedRewards - amountToClaim; // Safe due to the previous line
 
-    if (stake) {
+    if(address(REWARD_TOKEN) == BMXX_ADDRESS) {
       amountToClaim = amountToClaim.add(amountToClaim.mul(EXTRA_PSM_REWARD).div(100));
       REWARD_TOKEN.transferFrom(REWARDS_VAULT, address(this), amountToClaim);
       PSM.stake(to, amountToClaim);

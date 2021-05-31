@@ -29,4 +29,6 @@ contract LendingPoolStorage {
   uint256 internal _flashLoanPremiumTotal;
 
   uint256 internal _maxNumberOfReserves;
+
+  address internal _flashLoanPremiumCollector;
 }

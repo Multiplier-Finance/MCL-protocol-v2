@@ -49,7 +49,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
-  uint256 public constant LENDINGPOOL_REVISION = 0x2;
+  uint256 public constant LENDINGPOOL_REVISION = 0x3;
 
   modifier whenNotPaused() {
     _whenNotPaused();
@@ -58,6 +58,11 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
   modifier onlyLendingPoolConfigurator() {
     _onlyLendingPoolConfigurator();
+    _;
+  }
+  
+   modifier onlyPoolAdmin {
+    require(_addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
     _;
   }
 
@@ -75,6 +80,10 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   function getRevision() internal pure override returns (uint256) {
     return LENDINGPOOL_REVISION;
   }
+  
+  function setFlashLoanCollector(address _collector) external onlyPoolAdmin {
+      _flashLoanPremiumCollector = _collector;
+  }
 
   /**
    * @dev Function is invoked by the proxy contract when the LendingPool contract is added to the
@@ -86,7 +95,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   function initialize(ILendingPoolAddressesProvider provider) public initializer {
     _addressesProvider = provider;
     _maxStableRateBorrowSizePercent = 2500;
-    _flashLoanPremiumTotal = 9;
+    _flashLoanPremiumTotal = 2;
     _maxNumberOfReserves = 128;
   }
 
@@ -522,19 +531,25 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
         _reserves[vars.currentAsset].updateState();
         _reserves[vars.currentAsset].cumulateToLiquidityIndex(
           IERC20(vars.currentATokenAddress).totalSupply(),
-          vars.currentPremium
+          0
         );
         _reserves[vars.currentAsset].updateInterestRates(
           vars.currentAsset,
           vars.currentATokenAddress,
-          vars.currentAmountPlusPremium,
+          vars.currentAmount,
           0
         );
 
-        IERC20(vars.currentAsset).safeTransferFrom(
+        IERC20 currentAssetInstance = IERC20(vars.currentAsset);
+        currentAssetInstance.safeTransferFrom(
           receiverAddress,
           vars.currentATokenAddress,
-          vars.currentAmountPlusPremium
+          vars.currentAmount
+        );
+        currentAssetInstance.safeTransferFrom( 
+          receiverAddress,
+          _flashLoanPremiumCollector,
+          vars.currentPremium
         );
       } else {
         // If the user chose to not return the funds, the system checks if there is enough collateral and
@@ -717,6 +732,13 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    */
   function FLASHLOAN_PREMIUM_TOTAL() public view returns (uint256) {
     return _flashLoanPremiumTotal;
+  }
+
+   /**
+   * @dev Returns the Collector address of flash loans fees
+   */
+  function FLASHLOAN_PREMIUM_COLLECTOR() public view returns (address) {
+    return _flashLoanPremiumCollector;
   }
 
   /**
