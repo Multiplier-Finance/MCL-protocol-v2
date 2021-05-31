@@ -49,7 +49,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
-  uint256 public constant LENDINGPOOL_REVISION = 0x3;
+  uint256 public constant LENDINGPOOL_REVISION = 0x1;
 
   modifier whenNotPaused() {
     _whenNotPaused();
@@ -61,11 +61,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     _;
   }
   
-   modifier onlyPoolAdmin {
-    require(_addressesProvider.getPoolAdmin() == msg.sender, Errors.CALLER_NOT_POOL_ADMIN);
-    _;
-  }
-
   function _whenNotPaused() internal view {
     require(!_paused, Errors.LP_IS_PAUSED);
   }
@@ -77,14 +72,14 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     );
   }
 
+  function _getFlashLoanFeeVault() internal view returns (address){
+    return _addressesProvider.getFlashLoanFeeVault();
+  }
+  
   function getRevision() internal pure override returns (uint256) {
     return LENDINGPOOL_REVISION;
   }
   
-  function setFlashLoanCollector(address _collector) external onlyPoolAdmin {
-      _flashLoanPremiumCollector = _collector;
-  }
-
   /**
    * @dev Function is invoked by the proxy contract when the LendingPool contract is added to the
    * LendingPoolAddressesProvider of the market.
@@ -548,7 +543,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
         );
         currentAssetInstance.safeTransferFrom( 
           receiverAddress,
-          _flashLoanPremiumCollector,
+          _getFlashLoanFeeVault(),
           vars.currentPremium
         );
       } else {
@@ -732,13 +727,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
    */
   function FLASHLOAN_PREMIUM_TOTAL() public view returns (uint256) {
     return _flashLoanPremiumTotal;
-  }
-
-   /**
-   * @dev Returns the Collector address of flash loans fees
-   */
-  function FLASHLOAN_PREMIUM_COLLECTOR() public view returns (address) {
-    return _flashLoanPremiumCollector;
   }
 
   /**
