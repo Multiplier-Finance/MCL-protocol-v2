@@ -23,7 +23,7 @@ contract AaveIncentivesController is
   AaveDistributionManager
 {
   using SafeMath for uint256;
-  uint256 public constant REVISION = 2;
+  uint256 public constant REVISION = 1;
   address public constant BMXX_ADDRESS = 0x4131b87f74415190425ccd873048c708f8005823;
 
   IStakedAave public immutable PSM;
