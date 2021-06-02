@@ -44,7 +44,7 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
   });
 
   it('Takes WETH flashloan with mode = 0, returns the funds correctly', async () => {
-    const { pool, helpersContract, weth } = testEnv;
+    const { pool, helpersContract, weth, users } = testEnv;
 
     await pool.flashLoan(
       _mockFlashLoanReceiver.address,
@@ -67,19 +67,23 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
       .plus(reserveData.totalStableDebt.toString())
       .plus(reserveData.totalVariableDebt.toString());
 
-    expect(totalLiquidity.toString()).to.be.equal('1000720000000000000');
+    
+    const flashLoanFeeVaultAmount =  await weth.balanceOf(users[2].address);
+
+    expect(totalLiquidity.toString()).to.be.equal('1000000000000000000');
     expect(currentLiquidityRate.toString()).to.be.equal('0');
-    expect(currentLiquidityIndex.toString()).to.be.equal('1000720000000000000000000000');
+    expect(currentLiquidityIndex.toString()).to.be.equal('1000000000000000000000000000');
+    expect(flashLoanFeeVaultAmount.toString()).to.be.equal('160000000000000')
   });
 
   it('Takes an ETH flashloan with mode = 0 as big as the available liquidity', async () => {
-    const { pool, helpersContract, weth } = testEnv;
+    const { pool, helpersContract, weth, users } = testEnv;
 
     const reserveDataBefore = await helpersContract.getReserveData(weth.address);
     const txResult = await pool.flashLoan(
       _mockFlashLoanReceiver.address,
       [weth.address],
-      ['1000720000000000000'],
+      ['1000000000000000000'],
       [0],
       _mockFlashLoanReceiver.address,
       '0x10',
@@ -95,9 +99,13 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
       .plus(reserveData.totalStableDebt.toString())
       .plus(reserveData.totalVariableDebt.toString());
 
-    expect(totalLiquidity.toString()).to.be.equal('1001620648000000000');
+    const flashLoanFeeVaultAmount =  await weth.balanceOf(users[2].address);
+    console.log('flashLoanFeeVaultAmount',flashLoanFeeVaultAmount);
+
+    expect(totalLiquidity.toString()).to.be.equal('1000000000000000000');
     expect(currentLiqudityRate.toString()).to.be.equal('0');
-    expect(currentLiquidityIndex.toString()).to.be.equal('1001620648000000000000000000');
+    expect(currentLiquidityIndex.toString()).to.be.equal('1000000000000000000000000000');
+    expect(flashLoanFeeVaultAmount.toString()).to.be.equal('360000000000000')
   });
 
   it('Takes WETH flashloan, does not return the funds with mode = 0. (revert expected)', async () => {
@@ -248,7 +256,7 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
   });
 
   it('Takes out a 500 USDC flashloan, returns the funds correctly', async () => {
-    const { usdc, pool, helpersContract, deployer: depositor } = testEnv;
+    const { usdc, pool, helpersContract, deployer: depositor, users } = testEnv;
 
     await _mockFlashLoanReceiver.setFailExecutionTransfer(false);
 
@@ -278,16 +286,17 @@ makeSuite('LendingPool FlashLoan function', (testEnv: TestEnv) => {
     const currentLiqudityRate = reserveData.liquidityRate.toString();
     const currentLiquidityIndex = reserveData.liquidityIndex.toString();
     const currentUserBalance = userData.currentATokenBalance.toString();
-
-    const expectedLiquidity = await convertToCurrencyDecimals(usdc.address, '1000.450');
+    const expectedLiquidity = await convertToCurrencyDecimals(usdc.address, '1000.000')
+    const flashLoanFeeVaultAmount =  await usdc.balanceOf(users[2].address);
 
     expect(totalLiquidity).to.be.equal(expectedLiquidity, 'Invalid total liquidity');
     expect(currentLiqudityRate).to.be.equal('0', 'Invalid liquidity rate');
     expect(currentLiquidityIndex).to.be.equal(
-      new BigNumber('1.00045').multipliedBy(oneRay).toFixed(),
+      new BigNumber('1.00000').multipliedBy(oneRay).toFixed(),
       'Invalid liquidity index'
     );
     expect(currentUserBalance.toString()).to.be.equal(expectedLiquidity, 'Invalid user balance');
+    expect(flashLoanFeeVaultAmount.toString()).to.be.equal('100000')
   });
 
   it('Takes out a 500 USDC flashloan with mode = 0, does not return the funds. (revert expected)', async () => {
