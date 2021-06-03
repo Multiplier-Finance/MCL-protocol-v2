@@ -102,10 +102,11 @@ const buildTestEnv = async (deployer: Signer, secondaryWallet: Signer) => {
   const addressesProvider = await deployLendingPoolAddressesProvider(AaveConfig.MarketId);
   await waitForTx(await addressesProvider.setPoolAdmin(aaveAdmin));
 
-  //setting users[1] as emergency admin, which is in position 2 in the DRE addresses list
   const addressList = await getEthersSignersAddresses();
-
+  //setting users[1] as emergency admin, which is in position 2 in the DRE addresses list
   await waitForTx(await addressesProvider.setEmergencyAdmin(addressList[2]));
+   //setting users[2] as flashloan fee vault address, which is in position 3 in the DRE addresses list
+   await waitForTx(await addressesProvider.setFlashLoanFeeVault(addressList[3]));
 
   const addressesProviderRegistry = await deployLendingPoolAddressesProviderRegistry();
   await waitForTx(

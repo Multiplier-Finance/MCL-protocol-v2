@@ -71,11 +71,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
       Errors.LP_CALLER_NOT_LENDING_POOL_CONFIGURATOR
     );
   }
-
-  function _getFlashLoanFeeVault() internal view returns (address){
-    return _addressesProvider.getFlashLoanFeeVault();
-  }
-  
   function getRevision() internal pure override returns (uint256) {
     return LENDINGPOOL_REVISION;
   }
@@ -524,10 +519,6 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
 
       if (DataTypes.InterestRateMode(modes[vars.i]) == DataTypes.InterestRateMode.NONE) {
         _reserves[vars.currentAsset].updateState();
-        _reserves[vars.currentAsset].cumulateToLiquidityIndex(
-          IERC20(vars.currentATokenAddress).totalSupply(),
-          0
-        );
         _reserves[vars.currentAsset].updateInterestRates(
           vars.currentAsset,
           vars.currentATokenAddress,
@@ -535,15 +526,15 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
           0
         );
 
-        IERC20 currentAssetInstance = IERC20(vars.currentAsset);
-        currentAssetInstance.safeTransferFrom(
+        IERC20 token = IERC20(vars.currentAsset);
+        token.safeTransferFrom(
           receiverAddress,
           vars.currentATokenAddress,
           vars.currentAmount
         );
-        currentAssetInstance.safeTransferFrom( 
+        token.safeTransferFrom( 
           receiverAddress,
-          _getFlashLoanFeeVault(),
+          _addressesProvider.getFlashLoanFeeVault(),
           vars.currentPremium
         );
       } else {

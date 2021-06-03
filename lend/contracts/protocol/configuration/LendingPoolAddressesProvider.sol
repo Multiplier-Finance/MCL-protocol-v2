@@ -169,9 +169,9 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
     return getAddress(FLASH_LOAN_FEE_VAULT);
   }
 
-  function setFlashLoanFeeVault(address flashLoanFeeVault) external override onlyOwner {
-    _addresses[FLASH_LOAN_FEE_VAULT] = flashLoanFeeVault;
-    emit FlashLoanFeeVaultUpdated(flashLoanFeeVault);
+  function setFlashLoanFeeVault(address feeAddress) external override onlyOwner {
+    _addresses[FLASH_LOAN_FEE_VAULT] = feeAddress;
+    emit FlashLoanFeeVaultUpdated(feeAddress);
   }
 
   function getPriceOracle() external view override returns (address) {
