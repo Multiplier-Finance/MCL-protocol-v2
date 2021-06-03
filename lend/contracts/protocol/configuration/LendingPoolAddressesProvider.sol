@@ -27,6 +27,7 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
   bytes32 private constant LENDING_POOL_COLLATERAL_MANAGER = 'COLLATERAL_MANAGER';
   bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
   bytes32 private constant LENDING_RATE_ORACLE = 'LENDING_RATE_ORACLE';
+  bytes32 private constant FLASH_LOAN_FEE_VAULT = 'FLASH_LOAN_FEE_VAULT';
 
   constructor(string memory marketId) public {
     _setMarketId(marketId);
@@ -162,6 +163,15 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
   function setEmergencyAdmin(address emergencyAdmin) external override onlyOwner {
     _addresses[EMERGENCY_ADMIN] = emergencyAdmin;
     emit EmergencyAdminUpdated(emergencyAdmin);
+  }
+
+  function getFlashLoanFeeVault() external view override returns (address) {
+    return getAddress(FLASH_LOAN_FEE_VAULT);
+  }
+
+  function setFlashLoanFeeVault(address flashLoanFeeVault) external override onlyOwner {
+    _addresses[FLASH_LOAN_FEE_VAULT] = flashLoanFeeVault;
+    emit FlashLoanFeeVaultUpdated(flashLoanFeeVault);
   }
 
   function getPriceOracle() external view override returns (address) {

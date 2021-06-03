@@ -17,7 +17,6 @@ type ScenarioAction = {
   emissionPerSecond?: string;
   amountToClaim: string;
   to?: string;
-  toStake?: boolean;
 };
 
 const getRewardsBalanceScenarios: ScenarioAction[] = [
@@ -40,19 +39,16 @@ const getRewardsBalanceScenarios: ScenarioAction[] = [
     caseName: 'Should allow -1',
     emissionPerSecond: '2432424',
     amountToClaim: MAX_UINT_AMOUNT,
-    toStake: false,
   },
   {
     caseName: 'Should add extra premium on withdrawal to stake',
     emissionPerSecond: '1200',
     amountToClaim: '1034',
-    toStake: true,
   },
   {
     caseName: 'Should withdraw everything if amountToClaim more then rewards balance',
     emissionPerSecond: '100',
     amountToClaim: '1034',
-    toStake: true,
   },
   {
     caseName: 'Should withdraw to another user',
@@ -65,7 +61,6 @@ const getRewardsBalanceScenarios: ScenarioAction[] = [
     emissionPerSecond: '100',
     amountToClaim: '1034',
     to: RANDOM_ADDRESSES[5],
-    toStake: true,
   },
 ];
 
@@ -74,7 +69,6 @@ makeSuite('AaveIncentivesController claimRewards tests', (testEnv) => {
     caseName,
     amountToClaim: _amountToClaim,
     to,
-    toStake,
     emissionPerSecond,
   } of getRewardsBalanceScenarios) {
     let amountToClaim = _amountToClaim;
@@ -83,6 +77,9 @@ makeSuite('AaveIncentivesController claimRewards tests', (testEnv) => {
       const { aaveIncentivesController, stakedAave, aaveToken, aDaiMock } = testEnv;
 
       const distributionEndTimestamp = await aaveIncentivesController.DISTRIBUTION_END();
+      const rewardToken = await aaveIncentivesController.REWARD_TOKEN();
+      const bmxxToken = await aaveIncentivesController.BMXX_ADDRESS();
+
       const userAddress = await aaveIncentivesController.signer.getAddress();
 
       const underlyingAsset = aDaiMock.address;
@@ -98,7 +95,7 @@ makeSuite('AaveIncentivesController claimRewards tests', (testEnv) => {
 
       const destinationAddress = to || userAddress;
 
-      const destinationAddressBalanceBefore = await (toStake ? stakedAave : aaveToken).balanceOf(
+      const destinationAddressBalanceBefore = await ((rewardToken === bmxxToken) ? stakedAave : aaveToken).balanceOf(
         destinationAddress
       );
       await aDaiMock.setUserBalanceAndSupply(stakedByUser, totalStaked);
@@ -118,8 +115,7 @@ makeSuite('AaveIncentivesController claimRewards tests', (testEnv) => {
         await aaveIncentivesController.claimRewards(
           [underlyingAsset],
           amountToClaim,
-          destinationAddress,
-          toStake || false
+          destinationAddress
         )
       );
       const eventsEmitted = claimRewardsReceipt.events || [];
@@ -138,7 +134,7 @@ makeSuite('AaveIncentivesController claimRewards tests', (testEnv) => {
         userAddress
       );
 
-      const destinationAddressBalanceAfter = await (toStake ? stakedAave : aaveToken).balanceOf(
+      const destinationAddressBalanceAfter = await ((rewardToken === bmxxToken) ? stakedAave : aaveToken).balanceOf(
         destinationAddress
       );
 
@@ -221,7 +217,7 @@ makeSuite('AaveIncentivesController claimRewards tests', (testEnv) => {
         );
       }
 
-      if (toStake) {
+      if ((rewardToken === bmxxToken)) {
         expectedClaimedAmount = expectedClaimedAmount.add(
           expectedClaimedAmount.mul(PSM_STAKER_PREMIUM).div('100')
         );

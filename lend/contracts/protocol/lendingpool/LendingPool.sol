@@ -49,7 +49,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   using PercentageMath for uint256;
   using SafeERC20 for IERC20;
 
-  uint256 public constant LENDINGPOOL_REVISION = 0x2;
+  uint256 public constant LENDINGPOOL_REVISION = 0x1;
 
   modifier whenNotPaused() {
     _whenNotPaused();
@@ -60,7 +60,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     _onlyLendingPoolConfigurator();
     _;
   }
-
+  
   function _whenNotPaused() internal view {
     require(!_paused, Errors.LP_IS_PAUSED);
   }
@@ -72,10 +72,14 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
     );
   }
 
+  function _getFlashLoanFeeVault() internal view returns (address){
+    return _addressesProvider.getFlashLoanFeeVault();
+  }
+  
   function getRevision() internal pure override returns (uint256) {
     return LENDINGPOOL_REVISION;
   }
-
+  
   /**
    * @dev Function is invoked by the proxy contract when the LendingPool contract is added to the
    * LendingPoolAddressesProvider of the market.
@@ -86,7 +90,7 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
   function initialize(ILendingPoolAddressesProvider provider) public initializer {
     _addressesProvider = provider;
     _maxStableRateBorrowSizePercent = 2500;
-    _flashLoanPremiumTotal = 9;
+    _flashLoanPremiumTotal = 2;
     _maxNumberOfReserves = 128;
   }
 
@@ -522,19 +526,25 @@ contract LendingPool is VersionedInitializable, ILendingPool, LendingPoolStorage
         _reserves[vars.currentAsset].updateState();
         _reserves[vars.currentAsset].cumulateToLiquidityIndex(
           IERC20(vars.currentATokenAddress).totalSupply(),
-          vars.currentPremium
+          0
         );
         _reserves[vars.currentAsset].updateInterestRates(
           vars.currentAsset,
           vars.currentATokenAddress,
-          vars.currentAmountPlusPremium,
+          vars.currentAmount,
           0
         );
 
-        IERC20(vars.currentAsset).safeTransferFrom(
+        IERC20 currentAssetInstance = IERC20(vars.currentAsset);
+        currentAssetInstance.safeTransferFrom(
           receiverAddress,
           vars.currentATokenAddress,
-          vars.currentAmountPlusPremium
+          vars.currentAmount
+        );
+        currentAssetInstance.safeTransferFrom( 
+          receiverAddress,
+          _getFlashLoanFeeVault(),
+          vars.currentPremium
         );
       } else {
         // If the user chose to not return the funds, the system checks if there is enough collateral and

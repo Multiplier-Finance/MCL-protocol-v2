@@ -263,7 +263,11 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           .decimalPlaces(0, BigNumber.ROUND_DOWN);
 
         const flashLoanDebt = new BigNumber(amountToLiquidate.toString())
-          .multipliedBy(1.0009)
+          .multipliedBy(1.0000)
+          .toFixed(0);
+
+        const flashLoanFee = new BigNumber(amountToLiquidate.toString())
+          .multipliedBy(0.0002)
           .toFixed(0);
 
         const expectedProfit = ethers.BigNumber.from(expectedCollateralLiquidated.toString()).sub(
@@ -326,6 +330,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         );
         const borrowAssetContractBalance = await dai.balanceOf(flashLiquidationAdapter.address);
 
+        const flashLoanFeeVaultAmount =  await dai.balanceOf(users[2].address);
         expect(collateralAssetContractBalance).to.be.equal(
           '0',
           'Contract address should not keep any balance.'
@@ -359,6 +364,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
           'Invalid principal available liquidity'
         );
 
+       expect(flashLoanFeeVaultAmount.toString()).to.be.equal(flashLoanFee.toString());
         expect(ethReserveDataAfter.availableLiquidity.toString()).to.be.bignumber.almostEqual(
           new BigNumber(ethReserveDataBefore.availableLiquidity.toString())
             .minus(expectedCollateralLiquidated)

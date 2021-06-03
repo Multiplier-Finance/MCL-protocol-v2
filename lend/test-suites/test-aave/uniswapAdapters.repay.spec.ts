@@ -141,7 +141,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         await mockUniswapRouter.connect(user).setAmountToSwap(weth.address, liquidityToSwap);
 
         const flashLoanDebt = new BigNumber(expectedDaiAmount.toString())
-          .multipliedBy(1.0009)
+          .multipliedBy(1.0002)
           .toFixed(0);
 
         await mockUniswapRouter.setAmountIn(
@@ -256,7 +256,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         await mockUniswapRouter.connect(user).setAmountToSwap(weth.address, liquidityToSwap);
 
         const flashLoanDebt = new BigNumber(expectedDaiAmount.toString())
-          .multipliedBy(1.0009)
+          .multipliedBy(1.0002)
           .toFixed(0);
 
         await mockUniswapRouter.setAmountIn(
@@ -474,7 +474,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         await mockUniswapRouter.connect(user).setAmountToSwap(weth.address, bigMaxAmountToSwap);
 
         const flashLoanDebt = new BigNumber(expectedDaiAmount.toString())
-          .multipliedBy(1.0009)
+          .multipliedBy(1.0002)
           .toFixed(0);
 
         await mockUniswapRouter.setAmountIn(
@@ -559,7 +559,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         await mockUniswapRouter.connect(user).setAmountToSwap(weth.address, actualWEthSwapped);
 
         const flashLoanDebt = new BigNumber(expectedDaiAmount.toString())
-          .multipliedBy(1.0009)
+          .multipliedBy(1.0002)
           .toFixed(0);
 
         await mockUniswapRouter.setAmountIn(

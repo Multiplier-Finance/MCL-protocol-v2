@@ -1021,7 +1021,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         );
 
         // Flashloan + premium > aToken balance. Then it will only swap the balance - premium
-        const flashloanFee = liquidityToSwap.mul(9).div(10000);
+        const flashloanFee = liquidityToSwap.mul(2).div(10000);
         const swappedAmount = liquidityToSwap.sub(flashloanFee);
 
         await expect(
@@ -1124,7 +1124,7 @@ makeSuite('Uniswap adapters', (testEnv: TestEnv) => {
         );
 
         // Flashloan + premium > aToken balance. Then it will only swap the balance - premium
-        const flashloanFee = liquidityToSwap.mul(9).div(10000);
+        const flashloanFee = liquidityToSwap.mul(2).div(10000);
         const swappedAmount = liquidityToSwap.sub(flashloanFee);
 
         await expect(
