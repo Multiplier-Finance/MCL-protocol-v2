@@ -10,7 +10,7 @@ pragma solidity 0.6.12;
  **/
 interface ILendingPoolAddressesProvider {
   event MarketIdSet(string newMarketId);
-  event FlashLoanFeeVaultAddressSet(address newFlashLoanFeeVaultAddress);
+  event FlashLoanFeeVaultUpdated(address newAddress);
   event LendingPoolUpdated(address indexed newAddress);
   event ConfigurationAdminUpdated(address indexed newAddress);
   event EmergencyAdminUpdated(address indexed newAddress);
@@ -27,7 +27,7 @@ interface ILendingPoolAddressesProvider {
 
   function getFlashLoanFeeVault() external view returns (address);
 
-  function setFlashLoanVault(address flashLoanFeeVault) external;
+  function setFlashLoanFeeVault(address flashLoanFeeVault) external;
 
   function setAddress(bytes32 id, address newAddress) external;
 

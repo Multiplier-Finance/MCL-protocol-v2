@@ -18,7 +18,6 @@ import {ILendingPoolAddressesProvider} from '../../interfaces/ILendingPoolAddres
  **/
 contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider {
   string private _marketId;
-  address private _flashLoanFeeVault;
   mapping(bytes32 => address) private _addresses;
 
   bytes32 private constant LENDING_POOL = 'LENDING_POOL';
@@ -28,6 +27,7 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
   bytes32 private constant LENDING_POOL_COLLATERAL_MANAGER = 'COLLATERAL_MANAGER';
   bytes32 private constant PRICE_ORACLE = 'PRICE_ORACLE';
   bytes32 private constant LENDING_RATE_ORACLE = 'LENDING_RATE_ORACLE';
+  bytes32 private constant FLASH_LOAN_FEE_VAULT = 'FLASH_LOAN_FEE_VAULT';
 
   constructor(string memory marketId) public {
     _setMarketId(marketId);
@@ -41,28 +41,12 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
     return _marketId;
   }
 
-   /**
-   * @dev Returns the flashloan fee vault address where flash loan fee will be collected
-   * @return The flashloan fee vault address
-   **/
-  function getFlashLoanFeeVault() external view override returns (address) {
-    return _flashLoanFeeVault;
-  }
-
   /**
    * @dev Allows to set the market which this LendingPoolAddressesProvider represents
    * @param marketId The market id
    */
   function setMarketId(string memory marketId) external override onlyOwner {
     _setMarketId(marketId);
-  }
-
-  /**
-   * @dev Allows to set the flashloan fee vault address where flashloan fee will be collected
-   * @param flashLoanFeeVault The flashloan fee vault address
-   */
-  function setFlashLoanVault(address flashLoanFeeVault) external override onlyOwner {
-    _setFlashLoanFeeVault(flashLoanFeeVault);
   }
 
   /**
@@ -181,6 +165,15 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
     emit EmergencyAdminUpdated(emergencyAdmin);
   }
 
+  function getFlashLoanFeeVault() external view override returns (address) {
+    return getAddress(FLASH_LOAN_FEE_VAULT);
+  }
+
+  function setFlashLoanFeeVault(address flashLoanFeeVault) external override onlyOwner {
+    _addresses[FLASH_LOAN_FEE_VAULT] = flashLoanFeeVault;
+    emit FlashLoanFeeVaultUpdated(flashLoanFeeVault);
+  }
+
   function getPriceOracle() external view override returns (address) {
     return getAddress(PRICE_ORACLE);
   }
@@ -228,10 +221,5 @@ contract LendingPoolAddressesProvider is Ownable, ILendingPoolAddressesProvider 
   function _setMarketId(string memory marketId) internal {
     _marketId = marketId;
     emit MarketIdSet(marketId);
-  }
-
-  function _setFlashLoanFeeVault(address flashLoanFeeVault) internal {
-    _flashLoanFeeVault = flashLoanFeeVault;
-    emit FlashLoanFeeVaultAddressSet(flashLoanFeeVault);
   }
 }
