@@ -24,6 +24,9 @@ interface IBaseUniswapAdapter {
     address[] path;
   }
 
+  // assets allowed to use for swap
+  enum Assets {NONE, BNB, CAKE, BUSD, USDT, BTCB, UST, ETH, USDC}
+
   function WETH_ADDRESS() external returns (address);
 
   function MAX_SLIPPAGE_PERCENT() external returns (uint256);
@@ -50,7 +53,8 @@ interface IBaseUniswapAdapter {
   function getAmountsOut(
     uint256 amountIn,
     address reserveIn,
-    address reserveOut
+    address reserveOut,
+    Assets midAsset
   )
     external
     view
@@ -76,7 +80,8 @@ interface IBaseUniswapAdapter {
   function getAmountsIn(
     uint256 amountOut,
     address reserveIn,
-    address reserveOut
+    address reserveOut,
+    Assets midAsset
   )
     external
     view
