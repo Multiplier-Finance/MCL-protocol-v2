@@ -26,7 +26,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     uint256[] minAmountsToReceive;
     bool[] swapAllBalance;
     PermitParams permitParams;
-    Assets[] midAssets;
+    MidPath[] midAssets;
   }
 
   constructor(
@@ -133,7 +133,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     uint256[] calldata amountToSwapList,
     uint256[] calldata minAmountsToReceive,
     PermitSignature[] calldata permitParams,
-    Assets[] calldata midAssets
+    MidPath[] calldata midAssets
   ) external {
     require(
       assetToSwapFromList.length == assetToSwapToList.length &&
@@ -207,7 +207,7 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
     uint256 minAmountToReceive,
     bool swapAllBalance,
     PermitSignature memory permitSignature,
-    Assets midAsset
+    MidPath midAsset
   ) internal {
     SwapLiquidityLocalVars memory vars;
 
@@ -265,11 +265,11 @@ contract UniswapLiquiditySwapAdapter is BaseUniswapAdapter {
       uint8[] memory v,
       bytes32[] memory r,
       bytes32[] memory s,
-      Assets[] memory midAssets
+      MidPath[] memory midAssets
     ) =
       abi.decode(
         params,
-        (address[], uint256[], bool[], uint256[], uint256[], uint8[], bytes32[], bytes32[], Assets[])
+        (address[], uint256[], bool[], uint256[], uint256[], uint8[], bytes32[], bytes32[], MidPath[])
       );
 
     return

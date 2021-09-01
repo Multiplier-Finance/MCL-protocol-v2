@@ -19,7 +19,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     uint256 collateralAmount;
     uint256 rateMode;
     PermitSignature permitSignature;
-    Assets midAsset;
+    MidPath midAsset;
   }
 
   constructor(
@@ -95,7 +95,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     uint256 debtRepayAmount,
     uint256 debtRateMode,
     PermitSignature calldata permitSignature,
-    Assets midAsset
+    MidPath midAsset
   ) external {
     DataTypes.ReserveData memory collateralReserveData = _getReserveData(collateralAsset);
     DataTypes.ReserveData memory debtReserveData = _getReserveData(debtAsset);
@@ -168,7 +168,7 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
     address initiator,
     uint256 premium,
     PermitSignature memory permitSignature,
-    Assets midAsset
+    MidPath midAsset
   ) internal {
     DataTypes.ReserveData memory collateralReserveData = _getReserveData(collateralAsset);
 
@@ -247,11 +247,11 @@ contract UniswapRepayAdapter is BaseUniswapAdapter {
       uint8 v,
       bytes32 r,
       bytes32 s,
-      Assets midAsset
+      MidPath midAsset
     ) =
       abi.decode(
         params,
-        (address, uint256, uint256, uint256, uint256, uint8, bytes32, bytes32, Assets)
+        (address, uint256, uint256, uint256, uint256, uint8, bytes32, bytes32, MidPath)
       );
 
     return
