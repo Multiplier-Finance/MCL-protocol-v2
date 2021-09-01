@@ -37,7 +37,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
   IPriceOracleGetter public immutable override ORACLE;
   IUniswapV2Router02 public immutable override UNISWAP_ROUTER;
 
-  mapping(Assets => address payable) public swapAssets;
+  mapping(MidPath => address) public supportedMidPath;
 
   constructor(
     ILendingPoolAddressesProvider addressesProvider,
@@ -49,15 +49,15 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     WETH_ADDRESS = wethAddress;
   }
 
-  modifier onlyAllowedAssets(Assets midAsset) {
-    if(midAsset != Assets.NONE) {
-      require(swapAssets[midAsset] != address(0), "Asset not allowed");
+  modifier onlyAllowedPath(MidPath midAsset) {
+    if(midAsset != MidPath.NONE) {
+      require(supportedMidPath[midAsset] != address(0), "Asset not allowed");
     }
     _;
   } 
     
-  function setSwapAssets(Assets asset, address payable addr) public onlyOwner {
-      swapAssets[asset] = addr;
+  function setSupportedMidPath(MidPath asset, address addr) public onlyOwner {
+      supportedMidPath[asset] = addr;
   }
     
   /**
@@ -74,12 +74,12 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     uint256 amountIn,
     address reserveIn,
     address reserveOut,
-    Assets midAsset
+    MidPath midAsset
   )
     external
     view
     override
-    onlyAllowedAssets(midAsset)
+    onlyAllowedPath(midAsset)
     returns (
       uint256,
       uint256,
@@ -113,12 +113,12 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     uint256 amountOut,
     address reserveIn,
     address reserveOut,
-    Assets midAsset
+    MidPath midAsset
   )
     external
     view
     override
-    onlyAllowedAssets(midAsset)
+    onlyAllowedPath(midAsset)
     returns (
       uint256,
       uint256,
@@ -151,8 +151,8 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     address assetToSwapTo,
     uint256 amountToSwap,
     uint256 minAmountOut,
-    Assets midAsset
-  ) internal onlyAllowedAssets(midAsset) returns (uint256) {
+    MidPath midAsset
+  ) internal onlyAllowedPath(midAsset) returns (uint256) {
     uint256 fromAssetDecimals = _getDecimals(assetToSwapFrom);
     uint256 toAssetDecimals = _getDecimals(assetToSwapTo);
 
@@ -173,14 +173,14 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
 
     address[] memory path;
 
-    if(midAsset == Assets.NONE) {
+    if(midAsset == MidPath.NONE) {
       path = new address[](2);
       path[0] = assetToSwapFrom;
       path[1] = assetToSwapTo;
     } else {
       path = new address[](3);
       path[0] = assetToSwapFrom;
-      path[1] = swapAssets[midAsset];
+      path[1] = supportedMidPath[midAsset];
       path[2] = assetToSwapTo;
     }
       
@@ -212,8 +212,8 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     address assetToSwapTo,
     uint256 maxAmountToSwap,
     uint256 amountToReceive,
-    Assets midAsset
-  ) internal onlyAllowedAssets(midAsset) returns (uint256) {
+    MidPath midAsset
+  ) internal onlyAllowedPath(midAsset) returns (uint256) {
     uint256 fromAssetDecimals = _getDecimals(assetToSwapFrom);
     uint256 toAssetDecimals = _getDecimals(assetToSwapTo);
 
@@ -233,10 +233,10 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     IERC20(assetToSwapFrom).safeApprove(address(UNISWAP_ROUTER), maxAmountToSwap);
 
     address[] memory path;
-    if (midAsset != Assets.NONE) {
+    if (midAsset != MidPath.NONE) {
       path = new address[](3);
       path[0] = assetToSwapFrom;
-      path[1] = swapAssets[midAsset];
+      path[1] = supportedMidPath[midAsset];
       path[2] = assetToSwapTo;
     } else {
       path = new address[](2);
@@ -361,7 +361,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     address reserveIn,
     address reserveOut,
     uint256 amountIn,
-    Assets midAsset
+    MidPath midAsset
   ) internal view returns (AmountCalc memory) {
     // Subtract flash loan fee
     uint256 finalAmountIn = amountIn.sub(amountIn.mul(FLASHLOAN_PREMIUM_TOTAL).div(10000));
@@ -389,9 +389,9 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     uint256[] memory amountsWithWeth;
 
     address[] memory pathWithWeth = new address[](3);
-    if (midAsset != Assets.NONE) {
+    if (midAsset != MidPath.NONE) {
       pathWithWeth[0] = reserveIn;
-      pathWithWeth[1] = swapAssets[midAsset];
+      pathWithWeth[1] = supportedMidPath[midAsset];
       pathWithWeth[2] = reserveOut;
 
       try UNISWAP_ROUTER.getAmountsOut(finalAmountIn, pathWithWeth) returns (
@@ -419,24 +419,48 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
       bestAmountOut = amountsWithWeth[2];
     }
 
+    return _getAmountsOutDataInternal(
+        reserveIn, 
+        reserveOut, 
+        finalAmountIn, 
+        bestAmountOut, 
+        amountIn, 
+        amountsWithoutWeth, 
+        simplePath, 
+        pathWithWeth
+    );
+
+  }
+
+  function _getAmountsOutDataInternal(
+    address reserveIn,
+    address reserveOut,
+    uint256 finalAmountIn,
+    uint256 bestAmountOut,
+    uint256 amountIn,
+    uint256[] memory amountsWithoutWeth,
+    address[] memory simplePath,
+    address[] memory pathWithWeth
+  ) internal view returns (AmountCalc memory) {
+
     uint256 reserveInDecimals = _getDecimals(reserveIn);
     uint256 reserveOutDecimals = _getDecimals(reserveOut);
 
-    // uint256 outPerInPrice =
-    //   finalAmountIn.mul(10**18).mul(10**reserveOutDecimals).div(
-    //     bestAmountOut.mul(10**reserveInDecimals)
-    //   );
+    uint256 outPerInPrice =
+        finalAmountIn.mul(10**18).mul(10**reserveOutDecimals).div(
+          bestAmountOut.mul(10**reserveInDecimals)
+        );
 
     return
-      AmountCalc(
-        bestAmountOut,
-        0,
-        _calcUsdValue(reserveIn, amountIn, reserveInDecimals),
-        _calcUsdValue(reserveOut, bestAmountOut, reserveOutDecimals),
-        (bestAmountOut == 0) ? new address[](2) : (bestAmountOut == amountsWithoutWeth[1])
-          ? simplePath
-          : pathWithWeth
-      );
+        AmountCalc(
+          bestAmountOut,
+          outPerInPrice,
+          _calcUsdValue(reserveIn, amountIn, reserveInDecimals),
+          _calcUsdValue(reserveOut, bestAmountOut, reserveOutDecimals),
+          (bestAmountOut == 0) ? new address[](2) : (bestAmountOut == amountsWithoutWeth[1])
+            ? simplePath
+            : pathWithWeth
+    );
   }
 
   /**
@@ -454,7 +478,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     address reserveIn,
     address reserveOut,
     uint256 amountOut,
-    Assets midAsset
+    MidPath midAsset
   ) internal view returns (AmountCalc memory) {
     if (reserveIn == reserveOut) {
       // Add flash loan fee
@@ -508,7 +532,7 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     address reserveIn,
     address reserveOut,
     uint256 amountOut,
-    Assets midAsset
+    MidPath midAsset
   ) internal view returns (uint256[] memory, address[] memory) {
     address[] memory simplePath = new address[](2);
     simplePath[0] = reserveIn;
@@ -518,9 +542,9 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     uint256[] memory amountsWithWeth;
     address[] memory pathWithWeth = new address[](3);
 
-    if (midAsset != Assets.NONE) {
+    if (midAsset != MidPath.NONE) {
       pathWithWeth[0] = reserveIn;
-      pathWithWeth[1] = swapAssets[midAsset];
+      pathWithWeth[1] = supportedMidPath[midAsset];
       pathWithWeth[2] = reserveOut;
 
       try UNISWAP_ROUTER.getAmountsIn(amountOut, pathWithWeth) returns (
@@ -559,14 +583,14 @@ abstract contract BaseUniswapAdapter is FlashLoanReceiverBase, IBaseUniswapAdapt
     address reserveIn,
     address reserveOut,
     uint256 amountOut,
-    Assets midAsset
-  ) internal onlyAllowedAssets(midAsset) view returns (uint256[] memory) {
+    MidPath midAsset
+  ) internal onlyAllowedPath(midAsset) view returns (uint256[] memory) {
     address[] memory path;
 
-    if (midAsset != Assets.NONE) {
+    if (midAsset != MidPath.NONE) {
       path = new address[](3);
       path[0] = reserveIn;
-      path[1] = swapAssets[midAsset];
+      path[1] = supportedMidPath[midAsset];
       path[2] = reserveOut;
     } else {
       path = new address[](2);

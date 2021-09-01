@@ -25,7 +25,7 @@ interface IBaseUniswapAdapter {
   }
 
   // assets allowed to use for swap
-  enum Assets {NONE, BNB, CAKE, BUSD, USDT, BTCB, UST, ETH, USDC}
+  enum MidPath {NONE, BNB, CAKE, BUSD, USDT, BTCB, UST, ETH, USDC}
 
   function WETH_ADDRESS() external returns (address);
 
@@ -54,7 +54,7 @@ interface IBaseUniswapAdapter {
     uint256 amountIn,
     address reserveIn,
     address reserveOut,
-    Assets midAsset
+    MidPath midAsset
   )
     external
     view
@@ -81,7 +81,7 @@ interface IBaseUniswapAdapter {
     uint256 amountOut,
     address reserveIn,
     address reserveOut,
-    Assets midAsset
+    MidPath midAsset
   )
     external
     view
